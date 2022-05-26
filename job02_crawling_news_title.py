@@ -5,6 +5,7 @@ from selenium.common.exceptions import NoSuchFrameException, StaleElementReferen
 import pandas as pd
 import re
 import time
+import datetime
 
 category = ['Politics', 'Economic', 'Social', 'Culture', 'World', 'It']
 pages = [110, 110, 110, 78, 110, 66]  ##페이지수, 너무 높은건 좀 낮춰서 맞춤
@@ -19,9 +20,9 @@ options.add_argument('disable-gpu')
 driver = webdriver.Chrome('./chromedriver', options=options) #크롬부라우저를 운영하는 부라우저가 하나 만들어짐
 df_titles = pd.DataFrame()
 
-for i in range(0, 6):
+for i in range(4, 6): #섹션별로 . 6개섹션 0{} 되있는곳   / /4,6 world   5,6 it
     titles = []
-    for j in range(1,pages[i]+1):
+    for j in range(1,pages[i]+1): #페이지 . 페이지별로 주소가 달라짐 맨끝
         url = 'https://news.naver.com/main/main.naver?mode=LSD&mid=shm&sid1=10{}#&date=%2000:00:00&page=1{}'.format(i,j)
         driver.get(url)
         time.sleep(0.2)   # 초단위 슬립  , 머무름 아무것도 안하고
@@ -30,14 +31,14 @@ for i in range(0, 6):
             for l in range(1, 6):
                 x_path = '// *[ @ id = "section_body"] / ul[{}] / li[{}] / dl / dt[2] / a'.format(k, l)
                 try:
-                    title = driver.find_element_by_xpath(x_path).text
-                    title = re.compile('[^가-힣 ]').sub('',title)
+                    title = driver.find_element_by_xpath(x_path).text #텍스트만 엑스패스로긁어오기
+                    title = re.compile('[^가-힣 ]').sub('', title)
                     titles.append(title)
                 except NoSuchFrameException as e:
                     time.sleep(0.5)
                     try:
                         title = driver.find_element_by_xpath(x_path).text
-                        title = re.compile('[^가-힣 ]').sub('',title)
+                        title = re.compile('[^가-힣 ]').sub('', title)
                         titles.append(title)
                     except:
                         print('no such enlement')
@@ -57,14 +58,21 @@ for i in range(0, 6):
             df_section_titles = pd.DataFrame(titles, columns=['titles'])
             df_section_titles['category'] = category[i]
             df_titles = pd.concat([df_titles, df_section_titles], ignore_index=True)
-            df_titles.to_csv('./crawling_data_{}_{}.csv'.format(category[i], j), index=False)
-            titles = []
+            df_section_titles.to_csv('./crawling_data_{}_{}_{}.csv'.format(category[i], j-29, j), index=False)
+            titles = []  #안정장치1
     df_section_titles = pd.DataFrame(titles, columns=['titles'])
     df_section_titles['category'] = category[i]
     df_titles = pd.concat([df_titles, df_section_titles], ignore_index=True)
-    df_titles.to_csv('./crawling_data_{}_{}.csv'.format(category[i, j]), index=False)
-    titles = []
-driver.close()
+    df_section_titles.to_csv('./crawling_data_{}_last.csv'.format(category[i]), index=False)
+    titles = [] #안정장치2
+df_section_titles = pd.DataFrame(titles, columns=['titles'])
+df_section_titles['category'] = category[i]
+df_titles = pd.concat([df_titles, df_section_titles], ignore_index=True)
+df_titles.to_csv('./crawling_data/naver_news.titles_{}.csv'.format(
+    datetime.datetime.now().strftime('%Y%m%d')), index=False)
+
+
+driver.close() #에러가나면 시간낭비가될수있으니 중간중간 안전장치
 
 # df_titles.to_csv('./crawling_data', index=False)
 # driver.get(url)
