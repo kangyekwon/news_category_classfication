@@ -1,6 +1,6 @@
 # news_category_classfication
 
-이프로그래밍분류 제안위한 저장소입니다. pythob3.7에서 진행했습니다.
+이프로그래밍분류 제안 위한 저장소입니다. pythob3.7에서 진행했습니다.
 
 폴더구조
 
